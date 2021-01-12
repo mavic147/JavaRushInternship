@@ -109,6 +109,19 @@ public class Ship {
         this.rating = rating;
     }
 
+    /**
+     * Рассчет рейтинга корабля. Используется в методах createShip и updateShip в ShipRestController *3019 - текущий год
+     * */
+    public Double calculateRating() {
+        Double coefficient;
+        if (this.isUsed) {
+            coefficient = 0.5;
+        } else {
+            coefficient = 1.0;
+        }
+        return (80 * this.getSpeed() * coefficient) / (3019 - this.getProdDate().getYear() + 1);
+    }
+
     @Override
     public String toString() {
         return "Ship{" +

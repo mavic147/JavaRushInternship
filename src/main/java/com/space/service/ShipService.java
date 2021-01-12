@@ -10,7 +10,7 @@ public interface ShipService {
 
     void update(Ship ship);
 
-    void save(Ship ship);
+    void create(Ship ship);
 
     void delete(Long id);
 

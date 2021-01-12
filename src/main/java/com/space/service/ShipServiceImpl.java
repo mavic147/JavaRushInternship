@@ -20,7 +20,7 @@ public class ShipServiceImpl implements ShipService {
 
     @Override
     public Integer getCount() {//количество кораблей в соответствии с фильтрами
-        return null;
+        return 0;
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public void save(Ship ship) {//создание нового корабля
+    public void create(Ship ship) {//создание нового корабля
         shipRepository.save(ship);
     }
 
@@ -47,5 +47,4 @@ public class ShipServiceImpl implements ShipService {
     public List<Ship> getAllFiltered() {//отфильтрованный список кораблей
         return null;
     }
-
 }
