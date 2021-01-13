@@ -5,8 +5,9 @@ import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/rest/ships")
@@ -21,15 +22,18 @@ public class ShipRestController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        try {
-            String id = shipId.toString();
-            Long.parseLong(id);//проверка, является ли переданный аргумент числом
-        } catch (NumberFormatException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        Long roundedId = (long) Math.floor(shipId);//округляем до ближайшего целого вниз.
-        if (!shipId.equals(roundedId) || shipId < 0) {//Если число равно shipId значит shipId - целое число
+//        try {
+//            String id = shipId.toString();
+//            Long.parseLong(id);//проверка, является ли переданный аргумент числом
+//        } catch (NumberFormatException e) {
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }
+//
+//        Long roundedId = (long) Math.floor(shipId);//округляем до ближайшего целого вниз.
+//        if (!shipId.equals(roundedId) || shipId < 0) {//Если число равно shipId значит shipId - целое число
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }
+        if (!isIdValid(shipId)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -38,7 +42,7 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST)
-    public ResponseEntity<Ship> createShip(@RequestBody @Validated Ship ship) {
+    public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
         if (ship.getName() == null || ship.getPlanet() == null || ship.getName().isEmpty() || ship.getPlanet().isEmpty() ||
                 ship.getShipType() == null || ship.getProdDate() == null || ship.getSpeed() == null ||
                 ship.getCrewSize() == null || ship.getName().length() > 50 || ship.getPlanet().length() > 50 ||
@@ -58,15 +62,58 @@ public class ShipRestController {
         return new ResponseEntity<>(ship, HttpStatus.OK);
     }
 
-//    @RequestMapping(value = "/{id}", method = RequestMethod.POST)
-//    public ResponseEntity<Ship> updateShip(Ship ship) {
-//        if (ship == null) {
-//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//        }
-//
-//
+    @RequestMapping(value = "/{id}", method = RequestMethod.POST)
+    public ResponseEntity<Ship> updateShip(@RequestBody Ship ship) {
+        if (ship == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        if (!isIdValid(ship.getId())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        this.shipService.create(ship);
+        return new ResponseEntity<>(ship, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<Ship> deleteShip(Long id) {
+        Ship ship = this.shipService.getById(id);
+        if (ship == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        if (!isIdValid(ship.getId())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        this.shipService.delete(id);
+        return new ResponseEntity<>(ship, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "", method = RequestMethod.GET)
+    public ResponseEntity<List<Ship>> getAllShips() {//дописать с фильтрами
+        List<Ship> ships = this.shipService.getAll();
+        //что-то дописать
+        return new ResponseEntity<>(ships, HttpStatus.OK);
+    }
+
+//    @RequestMapping(value = "/count", method = RequestMethod.GET)
+//    public Integer countShips() {//дописать
 //
 //    }
 
+    private boolean isIdValid(Long id) {
+        try {
+            String shipId = id.toString();
+            Long.parseLong(shipId);//проверка, является ли переданный аргумент числом
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
+        //Если число равно shipId значит shipId - целое число
+        return id.equals(roundedId) && id >= 0;
+    }
 
 }

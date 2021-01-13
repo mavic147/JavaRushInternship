@@ -8,13 +8,9 @@ public interface ShipService {
 
     Integer getCount();
 
-    void update(Ship ship);
-
     void create(Ship ship);
 
     void delete(Long id);
 
     List<Ship> getAll();
-
-    List<Ship> getAllFiltered();
 }

@@ -11,7 +11,7 @@ import java.util.List;
 public class ShipServiceImpl implements ShipService {
 
     @Autowired
-    ShipRepository shipRepository;
+    private ShipRepository shipRepository;
 
     @Override
     public Ship getById(Long id) {//получение корабля по id
@@ -21,11 +21,6 @@ public class ShipServiceImpl implements ShipService {
     @Override
     public Integer getCount() {//количество кораблей в соответствии с фильтрами
         return 0;
-    }
-
-    @Override
-    public void update(Ship ship) {//редактирование существующего корабля
-
     }
 
     @Override
@@ -43,8 +38,4 @@ public class ShipServiceImpl implements ShipService {
         return shipRepository.findAll();
     }
 
-    @Override
-    public List<Ship> getAllFiltered() {//отфильтрованный список кораблей
-        return null;
-    }
 }

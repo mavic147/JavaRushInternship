@@ -19,6 +19,7 @@ public class Ship {
     @Column(name = "planet")
     private String planet;
 
+//    @Enumerated(value = EnumType.STRING) //вызвало ошибку
     @Column(name = "shipType")
     private String shipType;
 
