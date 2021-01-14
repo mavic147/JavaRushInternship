@@ -3,10 +3,14 @@ package com.space.controller;
 import com.space.model.Ship;
 import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -15,6 +19,15 @@ public class ShipRestController {
 
     @Autowired
     private ShipService shipService;
+    private static Connection connection;
+
+    static {
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cosmoport?serverTimezone=UTC", "root", "root");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Ship> getShipById(@PathVariable("id") Long shipId) {
@@ -22,17 +35,6 @@ public class ShipRestController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-//        try {
-//            String id = shipId.toString();
-//            Long.parseLong(id);//проверка, является ли переданный аргумент числом
-//        } catch (NumberFormatException e) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//
-//        Long roundedId = (long) Math.floor(shipId);//округляем до ближайшего целого вниз.
-//        if (!shipId.equals(roundedId) || shipId < 0) {//Если число равно shipId значит shipId - целое число
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
         if (!isIdValid(shipId)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -92,16 +94,47 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<List<Ship>> getAllShips() {//дописать с фильтрами
-        List<Ship> ships = this.shipService.getAll();
-        //что-то дописать
+    public ResponseEntity<List<Ship>> getAllShips(HttpServletRequest request) {
+//        List<Ship> ships = this.shipService.getAll();//получение всех кораблей без фильтров
+        List<Ship> ships = new ArrayList<>();
+        try {
+            Statement statement = connection.createStatement();
+            String query = "select * from Ship where 1=1 " + shipsListFilter(request);
+            ResultSet result = statement.executeQuery(query);
+            while (result.next()) {
+                Ship ship = new Ship();
+                ship.setId(result.getLong("id"));
+                ship.setName(result.getString("name"));
+                ship.setPlanet(result.getString("planet"));
+//                ship.setShipType((ShipType) result.getObject("shipType"));
+                ship.setProdDate(result.getDate("prodDate"));
+                ship.setUsed(result.getBoolean("isUsed"));
+                ship.setSpeed(result.getDouble("speed"));
+                ship.setCrewSize(result.getInt("crewSize"));
+                ship.setRating(result.getDouble("rating"));
+                ships.add(ship);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         return new ResponseEntity<>(ships, HttpStatus.OK);
     }
 
-//    @RequestMapping(value = "/count", method = RequestMethod.GET)
-//    public Integer countShips() {//дописать
-//
-//    }
+    @RequestMapping(value = "/count", method = RequestMethod.GET)
+    public Integer countShips(HttpServletRequest request) {
+        Integer amount = 0;
+        try {
+            Statement statement = connection.createStatement();
+            String query = "select count(*) from Ship where 1=1 " + shipsListFilter(request);
+            ResultSet result = statement.executeQuery(query);
+            while (result.next()) {
+                amount++;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return amount;
+    }
 
     private boolean isIdValid(Long id) {
         try {
@@ -114,6 +147,59 @@ public class ShipRestController {
         Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
         //Если число равно shipId значит shipId - целое число
         return id.equals(roundedId) && id >= 0;
+    }
+
+    private String shipsListFilter(HttpServletRequest request) {
+        StringBuilder query = new StringBuilder("");
+        String name = request.getParameter("name");
+        String planet = request.getParameter("planet");
+        String shipType = request.getParameter("shipType");
+        String after = request.getParameter("after");
+        String before = request.getParameter("before");
+        String isUsed = request.getParameter("isUsed");
+        String minSpeed = request.getParameter("minSpeed");
+        String maxSpeed = request.getParameter("maxSpeed");
+        String minCrewSize = request.getParameter("minCrewSize");
+        String maxCrewSize = request.getParameter("maxCrewSize");
+        String minRating = request.getParameter("minRating");
+        String maxRating = request.getParameter("maxRating");
+        if (name != null) {
+            query.append(" and name like '%" + name + "%'");
+        }
+        if (planet != null) {
+            query.append(" and planet like '%" + planet + "%'");
+        }
+        if (shipType != null) {
+            query.append(" and shipType = " + shipType);
+        }
+        if (after != null) {
+            query.append(" and prodDate > " + after);
+        }
+        if (before != null) {
+            query.append(" and prodDate < " + before);
+        }
+        if (isUsed != null) {
+            query.append(" and isUsed = " + isUsed);
+        }
+        if (minSpeed != null) {
+            query.append(" and speed >= " + minSpeed);
+        }
+        if (maxSpeed != null) {
+            query.append(" and speed <= " + maxSpeed);
+        }
+        if (minCrewSize != null) {
+            query.append(" and crew >= " + minCrewSize);
+        }
+        if (maxCrewSize != null) {
+            query.append(" and crew <= " + maxCrewSize);
+        }
+        if (minRating != null) {
+            query.append(" and rating >= " + minRating);
+        }
+        if (maxRating != null) {
+            query.append(" and rating <= " + maxRating);
+        }
+        return query.toString().trim();
     }
 
 }

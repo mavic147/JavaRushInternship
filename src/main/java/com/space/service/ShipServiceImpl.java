@@ -5,6 +5,7 @@ import com.space.repository.ShipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -36,6 +37,11 @@ public class ShipServiceImpl implements ShipService {
     @Override
     public List<Ship> getAll() {//список всех существующих кораблей
         return shipRepository.findAll();
+    }
+
+    @Override
+    public Ship getByName(String name) {
+        return shipRepository.findByName(name);
     }
 
 }

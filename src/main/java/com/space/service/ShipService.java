@@ -13,4 +13,6 @@ public interface ShipService {
     void delete(Long id);
 
     List<Ship> getAll();
+
+    public Ship getByName(String name);
 }

@@ -19,9 +19,9 @@ public class Ship {
     @Column(name = "planet")
     private String planet;
 
-//    @Enumerated(value = EnumType.STRING) //вызвало ошибку
+    @Enumerated(EnumType.STRING)
     @Column(name = "shipType")
-    private String shipType;
+    private ShipType shipType;
 
     @Column(name = "prodDate")
     private Date prodDate;
@@ -62,11 +62,11 @@ public class Ship {
         this.planet = planet;
     }
 
-    public String getShipType() {
+    public ShipType getShipType() {
         return shipType;
     }
 
-    public void setShipType(String shipType) {
+    public void setShipType(ShipType shipType) {
         this.shipType = shipType;
     }
 
