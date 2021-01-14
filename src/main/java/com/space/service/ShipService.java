@@ -2,9 +2,10 @@ package com.space.service;
 
 import com.space.model.Ship;
 import java.util.List;
+import java.util.Optional;
 
 public interface ShipService {
-    Ship getById(Long id);
+    Optional<Ship> getById(Long id);
 
     Integer getCount();
 
@@ -13,6 +14,4 @@ public interface ShipService {
     void delete(Long id);
 
     List<Ship> getAll();
-
-    public Ship getByName(String name);
 }

@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/rest/ships")
@@ -30,7 +31,7 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Ship> getShipById(@PathVariable("id") Long shipId) {
+    public ResponseEntity<Optional<Ship>> getShipById(@PathVariable("id") Long shipId) {
         if (shipId == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -39,7 +40,7 @@ public class ShipRestController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Ship ship = this.shipService.getById(shipId);
+        Optional<Ship> ship = this.shipService.getById(shipId);
         return new ResponseEntity<>(ship, HttpStatus.OK);
     }
 
@@ -73,6 +74,7 @@ public class ShipRestController {
         if (!isIdValid(ship.getId())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        ship.setRating(ship.calculateRating());
 
         this.shipService.create(ship);
         return new ResponseEntity<>(ship, HttpStatus.OK);
@@ -80,22 +82,21 @@ public class ShipRestController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Ship> deleteShip(Long id) {
-        Ship ship = this.shipService.getById(id);
-        if (ship == null) {
+        Optional<Ship> ship = this.shipService.getById(id);
+        if (!ship.isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        if (!isIdValid(ship.getId())) {
+        if (!isIdValid(ship.get().getId())) {//метод get() у Optional получает значение из сущности Optional
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         this.shipService.delete(id);
-        return new ResponseEntity<>(ship, HttpStatus.OK);
+        return new ResponseEntity<>(ship.get(), HttpStatus.OK);
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<List<Ship>> getAllShips(HttpServletRequest request) {
-//        List<Ship> ships = this.shipService.getAll();//получение всех кораблей без фильтров
         List<Ship> ships = new ArrayList<>();
         try {
             Statement statement = connection.createStatement();
@@ -136,6 +137,9 @@ public class ShipRestController {
         return amount;
     }
 
+    /**
+     * Проверка числа на валидность (является числом, целое, положительное)
+     * */
     private boolean isIdValid(Long id) {
         try {
             String shipId = id.toString();
@@ -149,6 +153,9 @@ public class ShipRestController {
         return id.equals(roundedId) && id >= 0;
     }
 
+    /**
+     * Составление sql-запроса в зависимости от пришедших параметров
+     * */
     private String shipsListFilter(HttpServletRequest request) {
         StringBuilder query = new StringBuilder("");
         String name = request.getParameter("name");
