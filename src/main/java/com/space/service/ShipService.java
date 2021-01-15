@@ -17,4 +17,6 @@ public interface ShipService {
     void delete(Long id);
 
     List<Ship> getAll(Specification<Ship> specification, Pageable pageable);
+
+    List<Ship> getAll();
 }

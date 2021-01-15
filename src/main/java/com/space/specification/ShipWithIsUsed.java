@@ -18,7 +18,7 @@ public class ShipWithIsUsed implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (isUsed == null) {
-            return cb.isTrue(cb.literal(true));
+            return cb.conjunction();
         }
         return cb.equal(root.get("isUsed"), isUsed);
     }

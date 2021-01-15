@@ -17,9 +17,9 @@ public class ShipWithName implements Specification<Ship> {
 
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
-        if (name == null) {
-            return cb.isTrue(cb.literal(true));
+        if (name.isEmpty()) {
+            return cb.conjunction();
         }
-        return cb.like(root.get("name"), name);
+        return cb.like(root.get("name"), "%"+ this.name +"%");
     }
 }

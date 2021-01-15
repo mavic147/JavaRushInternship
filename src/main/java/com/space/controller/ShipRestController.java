@@ -93,17 +93,18 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<List<Ship>> getAllShips(@RequestParam("name") String name, @RequestParam("planet") String planet,
-                                            @RequestParam("shipType") ShipType shipType, @RequestParam("after") Long after,
-                                            @RequestParam("before") Long before, @RequestParam("isUsed") Boolean isUsed,
-                                            @RequestParam("minSpeed") Double minSpeed, @RequestParam("maxSpeed") Double maxSpeed,
-                                            @RequestParam("minCrewSize") Integer minCrewSize, @RequestParam("maxCrewSize") Integer maxCrewSize,
-                                            @RequestParam("minRating") Double minRating, @RequestParam("maxRating") Double maxRating,
-                                            @RequestParam("order") ShipOrder order, @RequestParam("pageNumber") Integer pageNumber,
-                                            @RequestParam("pageSize") Integer pageSize) {
+    public ResponseEntity<List<Ship>> getAllShips(@RequestParam(value = "name", required = false) String name, @RequestParam(value = "planet", required = false) String planet,
+                                            @RequestParam(value = "shipType", required = false) ShipType shipType, @RequestParam(value = "after", required = false) Long after,
+                                            @RequestParam(value = "before", required = false) Long before, @RequestParam(value = "isUsed", required = false) Boolean isUsed,
+                                            @RequestParam(value = "minSpeed", required = false) Double minSpeed, @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
+                                            @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize, @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
+                                            @RequestParam(value = "minRating", required = false) Double minRating, @RequestParam(value = "maxRating", required = false) Double maxRating,
+                                            @RequestParam(value = "order", required = false) ShipOrder order, @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 //        List<Ship> ships = this.shipService.getAll();
         List<Ship> ships;
 
+        //если эти параметры не указаны
         if (pageNumber == null) {
             pageNumber = 0;
         }
@@ -111,7 +112,7 @@ public class ShipRestController {
             pageSize = 3;
         }
 
-        Pageable pageable;
+        Pageable pageable; //пагинация + сортировка
         if (order == ShipOrder.ID) {
             pageable = PageRequest.of(pageNumber, pageSize, Sort.by("id"));
         } else if (order == ShipOrder.SPEED) {
@@ -130,7 +131,11 @@ public class ShipRestController {
                 .and(new ShipWithMinCrewSize(minCrewSize)).and(new ShipWithMaxCrewSize(maxCrewSize)).and(new ShipWithMinRating(minRating))
                 .and(new ShipWithMaxRating(maxRating));
 
-        ships = this.shipService.getAll(spec, pageable);
+        if (spec == null) {
+            ships = this.shipService.getAll();
+        } else {
+            ships = this.shipService.getAll(spec, pageable);
+        }
 
         return new ResponseEntity<>(ships, HttpStatus.OK);
     }

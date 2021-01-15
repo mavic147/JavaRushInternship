@@ -18,7 +18,7 @@ public class ShipWithMaxSpeed implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (maxSpeed == null) {
-            return cb.isTrue(cb.literal(true));
+            return cb.conjunction();
         }
         return cb.lessThanOrEqualTo(root.get("speed"), maxSpeed);
     }

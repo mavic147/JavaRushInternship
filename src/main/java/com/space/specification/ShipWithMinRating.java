@@ -18,7 +18,7 @@ public class ShipWithMinRating implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (minRating == null) {
-            return cb.isTrue(cb.literal(true));
+            return cb.conjunction();
         }
         return cb.greaterThanOrEqualTo(root.get("rating"), minRating);
     }

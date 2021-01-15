@@ -18,7 +18,7 @@ public class ShipWithMaxCrewSize implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (maxCrewSize == null) {
-            return cb.isTrue(cb.literal(true));
+            return cb.conjunction();
         }
         return cb.lessThanOrEqualTo(root.get("crewSize"), maxCrewSize);
     }

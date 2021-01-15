@@ -18,7 +18,7 @@ public class ShipWithAfter implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (after == null) {
-            return cb.isTrue(cb.literal(true));
+            return cb.conjunction();
         }
         return cb.greaterThan(root.get("prodDate"), after);
     }
