@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,12 +43,14 @@ public class ShipRestController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(ship.getProdDate().getTime());
+        int year = date.get(Calendar.YEAR);
         if (ship.getName() == null || ship.getPlanet() == null || ship.getName().isEmpty() || ship.getPlanet().isEmpty() ||
                 ship.getShipType() == null || ship.getProdDate() == null || ship.getSpeed() == null ||
                 ship.getCrewSize() == null || ship.getName().length() > 50 || ship.getPlanet().length() > 50 ||
                 ship.getSpeed() < 0.01 || ship.getSpeed() > 0.99 || ship.getCrewSize() < 1 || ship.getCrewSize() > 9999 ||
-                ship.getProdDate().getTime() < 0 || ship.getProdDate().getYear() < 2800 ||
-                ship.getProdDate().getYear() > 3019) {
+                ship.getProdDate().getTime() < 0 || year < 2800 ||year > 3019) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -113,13 +116,13 @@ public class ShipRestController {
 
         Pageable pageable; //пагинация + сортировка
         if (order == ShipOrder.ID) {
-            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("id"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "id"));
         } else if (order == ShipOrder.SPEED) {
-            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("speed"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "speed"));
         } else if (order == ShipOrder.DATE) {
-            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("prodDate"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "prodDate"));
         } else if (order == ShipOrder.RATING) {
-            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("rating"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "rating"));
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
