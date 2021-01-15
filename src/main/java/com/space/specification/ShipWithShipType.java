@@ -19,7 +19,7 @@ public class ShipWithShipType implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (shipType == null) {
-            cb.conjunction();
+            return cb.isTrue(cb.literal(true));
         }
         return cb.equal(root.get("shipType"), this.shipType);
     }

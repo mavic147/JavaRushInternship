@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -125,36 +124,24 @@ public class ShipRestController {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
 
-        Specification<Ship> spec = Specifications.where(new ShipWithName(name)).and(new ShipWithPlanet(planet))
-                .and(new ShipWithShipType(shipType)).and(new ShipWithAfter(after)).and(new ShipWithBefore(before))
-                .and(new ShipWithIsUsed(isUsed)).and(new ShipWithMinSpeed(minSpeed)).and(new ShipWithMaxSpeed(maxSpeed))
-                .and(new ShipWithMinCrewSize(minCrewSize)).and(new ShipWithMaxCrewSize(maxCrewSize)).and(new ShipWithMinRating(minRating))
-                .and(new ShipWithMaxRating(maxRating));
+        Specification<Ship> spec = makeSpecification(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating);
 
-        if (spec == null) {
-            ships = this.shipService.getAll();
-        } else {
-            ships = this.shipService.getAll(spec, pageable);
-        }
+        ships = this.shipService.getAll(spec, pageable);
 
         return new ResponseEntity<>(ships, HttpStatus.OK);
     }
 
-//    @RequestMapping(value = "/count", method = RequestMethod.GET)
-//    public Integer countShips(HttpServletRequest request) {
-//        Integer amount = 0;
-//        try {
-//            Statement statement = connection.createStatement();
-//            String query = "select count(*) from Ship where 1=1 " + shipsListFilter(request);
-//            ResultSet result = statement.executeQuery(query);
-//            while (result.next()) {
-//                amount++;
-//            }
-//        } catch (SQLException throwables) {
-//            throwables.printStackTrace();
-//        }
-//        return amount;
-//    }
+    @RequestMapping(value = "/count", method = RequestMethod.GET)
+    public Integer countShips(@RequestParam(value = "name", required = false) String name, @RequestParam(value = "planet", required = false) String planet,
+                              @RequestParam(value = "shipType", required = false) ShipType shipType, @RequestParam(value = "after", required = false) Long after,
+                              @RequestParam(value = "before", required = false) Long before, @RequestParam(value = "isUsed", required = false) Boolean isUsed,
+                              @RequestParam(value = "minSpeed", required = false) Double minSpeed, @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
+                              @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize, @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
+                              @RequestParam(value = "minRating", required = false) Double minRating, @RequestParam(value = "maxRating", required = false) Double maxRating) {
+        Specification<Ship> spec = makeSpecification(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating);
+        List<Ship> ships = this.shipService.getAll(spec);
+        return ships.size();
+    }
 
     /**
      * Проверка числа на валидность (является числом, целое, положительное)
@@ -170,6 +157,19 @@ public class ShipRestController {
         Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
         //Если число равно shipId значит shipId - целое число
         return id.equals(roundedId) && id >= 0;
+    }
+
+    private Specification<Ship> makeSpecification(@RequestParam(value = "name", required = false) String name, @RequestParam(value = "planet", required = false) String planet,
+                                                  @RequestParam(value = "shipType", required = false) ShipType shipType, @RequestParam(value = "after", required = false) Long after,
+                                                  @RequestParam(value = "before", required = false) Long before, @RequestParam(value = "isUsed", required = false) Boolean isUsed,
+                                                  @RequestParam(value = "minSpeed", required = false) Double minSpeed, @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
+                                                  @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize, @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
+                                                  @RequestParam(value = "minRating", required = false) Double minRating, @RequestParam(value = "maxRating", required = false) Double maxRating) {
+        return Specifications.where(new ShipWithName(name)).and(new ShipWithPlanet(planet))
+                .and(new ShipWithShipType(shipType)).and(new ShipWithAfter(after)).and(new ShipWithBefore(before))
+                .and(new ShipWithIsUsed(isUsed)).and(new ShipWithMinSpeed(minSpeed)).and(new ShipWithMaxSpeed(maxSpeed))
+                .and(new ShipWithMinCrewSize(minCrewSize)).and(new ShipWithMaxCrewSize(maxCrewSize)).and(new ShipWithMinRating(minRating))
+                .and(new ShipWithMaxRating(maxRating));
     }
 
 }

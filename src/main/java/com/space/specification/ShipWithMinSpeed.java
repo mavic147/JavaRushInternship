@@ -18,7 +18,7 @@ public class ShipWithMinSpeed implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (minSpeed == null) {
-            return cb.conjunction();
+            return cb.isTrue(cb.literal(true));
         }
         return cb.greaterThanOrEqualTo(root.get("speed"), minSpeed);
     }

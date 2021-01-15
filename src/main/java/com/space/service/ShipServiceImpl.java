@@ -42,8 +42,7 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public List<Ship> getAll() {
-        return shipRepository.findAll();
+    public List<Ship> getAll(Specification<Ship> specification) {
+        return shipRepository.findAll(specification);
     }
-
 }

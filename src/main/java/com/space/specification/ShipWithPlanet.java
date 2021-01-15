@@ -17,8 +17,8 @@ public class ShipWithPlanet implements Specification<Ship> {
 
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
-        if (planet.isEmpty()) {
-            return cb.conjunction();
+        if (planet == null) {
+            return cb.isTrue(cb.literal(true));
         }
         return cb.like(root.get("planet"), "%"+ this.planet +"%");
     }

@@ -18,7 +18,7 @@ public class ShipWithBefore implements Specification<Ship> {
     @Override
     public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
         if (before == null) {
-            return cb.conjunction();
+            return cb.isTrue(cb.literal(true));
         }
         return cb.lessThan(root.get("prodDate"), before);
     }

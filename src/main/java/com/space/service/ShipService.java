@@ -18,5 +18,5 @@ public interface ShipService {
 
     List<Ship> getAll(Specification<Ship> specification, Pageable pageable);
 
-    List<Ship> getAll();
+    List<Ship> getAll(Specification<Ship> specification);
 }
