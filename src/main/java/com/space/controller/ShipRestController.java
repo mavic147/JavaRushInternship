@@ -31,17 +31,18 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public ResponseEntity<Optional<Ship>> getShipById(@PathVariable("id") Long shipId) {
-        if (shipId == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
+    public ResponseEntity<Ship> getShipById(@PathVariable("id") Long shipId) {
         if (!isIdValid(shipId)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        Optional<Ship> ship = this.shipService.getById(shipId);
-        return new ResponseEntity<>(ship, HttpStatus.OK);
+        Optional<Ship> shipOptional = this.shipService.getById(shipId);
+        if (shipOptional.isPresent()) {
+            Ship ship = shipOptional.get();
+            return new ResponseEntity<>(ship, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST)
@@ -81,18 +82,18 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Ship> deleteShip(Long id) {
-        Optional<Ship> ship = this.shipService.getById(id);
-        if (!ship.isPresent()) {
+    public ResponseEntity<Ship> deleteShip(@PathVariable("id") Long id) {
+        Optional<Ship> shipOptional = this.shipService.getById(id);
+        if (shipOptional.isPresent()) {
+            Ship ship = shipOptional.get();
+            if (!isIdValid(ship.getId())) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            this.shipService.delete(id);
+            return new ResponseEntity<>(ship, HttpStatus.OK);
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
-        if (!isIdValid(ship.get().getId())) {//метод get() у Optional получает значение из сущности Optional
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        this.shipService.delete(id);
-        return new ResponseEntity<>(ship.get(), HttpStatus.OK);
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
@@ -118,7 +119,8 @@ public class ShipRestController {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return new ResponseEntity<>(ships, HttpStatus.OK);
+        List<Ship> ships2 = this.shipService.getAll();
+        return new ResponseEntity<>(ships2, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/count", method = RequestMethod.GET)
