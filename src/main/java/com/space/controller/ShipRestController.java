@@ -1,15 +1,20 @@
 package com.space.controller;
 
 import com.space.model.Ship;
+import com.space.model.ShipType;
 import com.space.service.ShipService;
+import com.space.specification.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,15 +25,6 @@ public class ShipRestController {
 
     @Autowired
     private ShipService shipService;
-    private static Connection connection;
-
-    static {
-        try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cosmoport?serverTimezone=UTC", "root", "root");
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Ship> getShipById(@PathVariable("id") Long shipId) {
@@ -97,47 +93,63 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<List<Ship>> getAllShips(HttpServletRequest request) {
-        List<Ship> ships = new ArrayList<>();
-        try {
-            Statement statement = connection.createStatement();
-            String query = "select * from Ship where 1=1 " + shipsListFilter(request);
-            ResultSet result = statement.executeQuery(query);
-            while (result.next()) {
-                Ship ship = new Ship();
-                ship.setId(result.getLong("id"));
-                ship.setName(result.getString("name"));
-                ship.setPlanet(result.getString("planet"));
-//                ship.setShipType((ShipType) result.getObject("shipType"));
-                ship.setProdDate(result.getDate("prodDate"));
-                ship.setUsed(result.getBoolean("isUsed"));
-                ship.setSpeed(result.getDouble("speed"));
-                ship.setCrewSize(result.getInt("crewSize"));
-                ship.setRating(result.getDouble("rating"));
-                ships.add(ship);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+    public ResponseEntity<List<Ship>> getAllShips(@RequestParam("name") String name, @RequestParam("planet") String planet,
+                                            @RequestParam("shipType") ShipType shipType, @RequestParam("after") Long after,
+                                            @RequestParam("before") Long before, @RequestParam("isUsed") Boolean isUsed,
+                                            @RequestParam("minSpeed") Double minSpeed, @RequestParam("maxSpeed") Double maxSpeed,
+                                            @RequestParam("minCrewSize") Integer minCrewSize, @RequestParam("maxCrewSize") Integer maxCrewSize,
+                                            @RequestParam("minRating") Double minRating, @RequestParam("maxRating") Double maxRating,
+                                            @RequestParam("order") ShipOrder order, @RequestParam("pageNumber") Integer pageNumber,
+                                            @RequestParam("pageSize") Integer pageSize) {
+//        List<Ship> ships = this.shipService.getAll();
+        List<Ship> ships;
+
+        if (pageNumber == null) {
+            pageNumber = 0;
         }
-        List<Ship> ships2 = this.shipService.getAll();
-        return new ResponseEntity<>(ships2, HttpStatus.OK);
+        if (pageSize == null) {
+            pageSize = 3;
+        }
+
+        Pageable pageable;
+        if (order == ShipOrder.ID) {
+            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("id"));
+        } else if (order == ShipOrder.SPEED) {
+            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("speed"));
+        } else if (order == ShipOrder.DATE) {
+            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("prodDate"));
+        } else if (order == ShipOrder.RATING) {
+            pageable = PageRequest.of(pageNumber, pageSize, Sort.by("rating"));
+        } else {
+            pageable = PageRequest.of(pageNumber, pageSize);
+        }
+
+        Specification<Ship> spec = Specifications.where(new ShipWithName(name)).and(new ShipWithPlanet(planet))
+                .and(new ShipWithShipType(shipType)).and(new ShipWithAfter(after)).and(new ShipWithBefore(before))
+                .and(new ShipWithIsUsed(isUsed)).and(new ShipWithMinSpeed(minSpeed)).and(new ShipWithMaxSpeed(maxSpeed))
+                .and(new ShipWithMinCrewSize(minCrewSize)).and(new ShipWithMaxCrewSize(maxCrewSize)).and(new ShipWithMinRating(minRating))
+                .and(new ShipWithMaxRating(maxRating));
+
+        ships = this.shipService.getAll(spec, pageable);
+
+        return new ResponseEntity<>(ships, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/count", method = RequestMethod.GET)
-    public Integer countShips(HttpServletRequest request) {
-        Integer amount = 0;
-        try {
-            Statement statement = connection.createStatement();
-            String query = "select count(*) from Ship where 1=1 " + shipsListFilter(request);
-            ResultSet result = statement.executeQuery(query);
-            while (result.next()) {
-                amount++;
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return amount;
-    }
+//    @RequestMapping(value = "/count", method = RequestMethod.GET)
+//    public Integer countShips(HttpServletRequest request) {
+//        Integer amount = 0;
+//        try {
+//            Statement statement = connection.createStatement();
+//            String query = "select count(*) from Ship where 1=1 " + shipsListFilter(request);
+//            ResultSet result = statement.executeQuery(query);
+//            while (result.next()) {
+//                amount++;
+//            }
+//        } catch (SQLException throwables) {
+//            throwables.printStackTrace();
+//        }
+//        return amount;
+//    }
 
     /**
      * Проверка числа на валидность (является числом, целое, положительное)
@@ -153,62 +165,6 @@ public class ShipRestController {
         Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
         //Если число равно shipId значит shipId - целое число
         return id.equals(roundedId) && id >= 0;
-    }
-
-    /**
-     * Составление sql-запроса в зависимости от пришедших параметров
-     * */
-    private String shipsListFilter(HttpServletRequest request) {
-        StringBuilder query = new StringBuilder("");
-        String name = request.getParameter("name");
-        String planet = request.getParameter("planet");
-        String shipType = request.getParameter("shipType");
-        String after = request.getParameter("after");
-        String before = request.getParameter("before");
-        String isUsed = request.getParameter("isUsed");
-        String minSpeed = request.getParameter("minSpeed");
-        String maxSpeed = request.getParameter("maxSpeed");
-        String minCrewSize = request.getParameter("minCrewSize");
-        String maxCrewSize = request.getParameter("maxCrewSize");
-        String minRating = request.getParameter("minRating");
-        String maxRating = request.getParameter("maxRating");
-        if (name != null) {
-            query.append(" and name like '%" + name + "%'");
-        }
-        if (planet != null) {
-            query.append(" and planet like '%" + planet + "%'");
-        }
-        if (shipType != null) {
-            query.append(" and shipType = " + shipType);
-        }
-        if (after != null) {
-            query.append(" and prodDate > " + after);
-        }
-        if (before != null) {
-            query.append(" and prodDate < " + before);
-        }
-        if (isUsed != null) {
-            query.append(" and isUsed = " + isUsed);
-        }
-        if (minSpeed != null) {
-            query.append(" and speed >= " + minSpeed);
-        }
-        if (maxSpeed != null) {
-            query.append(" and speed <= " + maxSpeed);
-        }
-        if (minCrewSize != null) {
-            query.append(" and crew >= " + minCrewSize);
-        }
-        if (maxCrewSize != null) {
-            query.append(" and crew <= " + maxCrewSize);
-        }
-        if (minRating != null) {
-            query.append(" and rating >= " + minRating);
-        }
-        if (maxRating != null) {
-            query.append(" and rating <= " + maxRating);
-        }
-        return query.toString().trim();
     }
 
 }
