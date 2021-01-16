@@ -28,7 +28,7 @@ public class ShipRestController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<Ship> getShipById(@PathVariable("id") Long shipId) {
-        if (!isIdValid(shipId)) {
+        if (isNotIdValid(shipId)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -65,15 +65,21 @@ public class ShipRestController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
-    public ResponseEntity<Ship> updateShip(@RequestBody Ship ship) {
-        if (ship == null) {
+    public ResponseEntity<Ship> updateShip(@PathVariable("id") Long id, @RequestBody Ship ship) {
+        if (isNotIdValid(id)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<Ship> shipOptional = this.shipService.getById(id);
+        if (shipOptional.isPresent()) {
+            Ship shipToUpdate = shipOptional.get();
+
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        if (!isIdValid(ship.getId())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         ship.setRating(ship.calculateRating());
+
 
         this.shipService.create(ship);
         return new ResponseEntity<>(ship, HttpStatus.OK);
@@ -84,7 +90,7 @@ public class ShipRestController {
         Optional<Ship> shipOptional = this.shipService.getById(id);
         if (shipOptional.isPresent()) {
             Ship ship = shipOptional.get();
-            if (!isIdValid(ship.getId())) {
+            if (isNotIdValid(ship.getId())) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             this.shipService.delete(id);
@@ -149,17 +155,17 @@ public class ShipRestController {
     /**
      * Проверка числа на валидность (является числом, целое, положительное)
      * */
-    private boolean isIdValid(Long id) {
+    private boolean isNotIdValid(Long id) {
         try {
             String shipId = id.toString();
             Long.parseLong(shipId);//проверка, является ли переданный аргумент числом
         } catch (NumberFormatException e) {
-            return false;
+            return true;
         }
 
         Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
         //Если число равно shipId значит shipId - целое число
-        return id.equals(roundedId) && id >= 0;
+        return !id.equals(roundedId) || id < 0;
     }
 
     private Specification<Ship> makeSpecification(@RequestParam(value = "name", required = false) String name, @RequestParam(value = "planet", required = false) String planet,

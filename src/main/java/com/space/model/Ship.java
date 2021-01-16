@@ -1,9 +1,7 @@
 package com.space.model;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.Date;
 
 /**
@@ -125,7 +123,11 @@ public class Ship {
         }
         DecimalFormat df = new DecimalFormat("#.##");
         Double rating = (80 * this.getSpeed() * coefficient) / (3019 - this.getProdDate().getYear() + 1);
-        return Double.parseDouble(df.format(rating).replace(",", "."));
+        try {
+            return Double.parseDouble(df.format(rating).replace(",", "."));
+        } catch (NumberFormatException e) {
+            return 0.00;
+        }
     }
 
     @Override
