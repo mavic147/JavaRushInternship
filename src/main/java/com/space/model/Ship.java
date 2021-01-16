@@ -2,6 +2,7 @@ package com.space.model;
 
 import javax.persistence.*;
 import java.text.DecimalFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -118,7 +119,9 @@ public class Ship {
         Double coefficient = this.isUsed ? 0.5 : 1.0;
         DecimalFormat df = new DecimalFormat("#.##");
         try {
-            Double rating = (80 * this.getSpeed() * coefficient) / (3019 - this.getProdDate().getYear() + 1);
+            Calendar date = Calendar.getInstance();
+            date.setTimeInMillis(this.getProdDate().getTime());
+            Double rating = (80 * this.getSpeed() * coefficient) / (3019 - date.get(Calendar.YEAR) + 1);
             return Double.parseDouble(df.format(rating).replace(",", "."));
         } catch (ArithmeticException e) {
             return 0.00;

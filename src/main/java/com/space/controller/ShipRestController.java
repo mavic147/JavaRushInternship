@@ -40,14 +40,18 @@ public class ShipRestController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
-        Calendar date = Calendar.getInstance();
-        date.setTimeInMillis(ship.getProdDate().getTime());
-        int year = date.get(Calendar.YEAR);
         if (ship.getName() == null || ship.getPlanet() == null || ship.getName().isEmpty() || ship.getPlanet().isEmpty() ||
                 ship.getShipType() == null || ship.getProdDate() == null || ship.getSpeed() == null ||
                 ship.getCrewSize() == null || ship.getName().length() > 50 || ship.getPlanet().length() > 50 ||
                 ship.getSpeed() < 0.01 || ship.getSpeed() > 0.99 || ship.getCrewSize() < 1 || ship.getCrewSize() > 9999 ||
-                ship.getProdDate().getTime() < 0 || year < 2800 || year > 3019) {
+                ship.getProdDate().getTime() < 0) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(ship.getProdDate().getTime());
+        int year = date.get(Calendar.YEAR);
+        if (year < 2800 || year > 3019) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
