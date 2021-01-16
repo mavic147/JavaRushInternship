@@ -40,11 +40,12 @@ public class ShipRestController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
-        if (ship.getName() == null || ship.getPlanet() == null || ship.getName().isEmpty() || ship.getPlanet().isEmpty() ||
-                ship.getShipType() == null || ship.getProdDate() == null || ship.getSpeed() == null ||
-                ship.getCrewSize() == null || ship.getName().length() > 50 || ship.getPlanet().length() > 50 ||
-                ship.getSpeed() < 0.01 || ship.getSpeed() > 0.99 || ship.getCrewSize() < 1 || ship.getCrewSize() > 9999 ||
-                ship.getProdDate().getTime() < 0) {
+        if (ship.getName() == null || ship.getPlanet() == null || ship.getShipType() == null
+                || ship.getProdDate() == null || ship.getSpeed() == null || ship.getCrewSize() == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (isIncorrect(ship)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -68,6 +69,10 @@ public class ShipRestController {
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     public ResponseEntity<Ship> updateShip(@PathVariable("id") Long id, @RequestBody Ship ship) {
         if (isNotIdValid(id)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (isIncorrect(ship)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -138,16 +143,14 @@ public class ShipRestController {
         }
 
         Pageable pageable; //пагинация + сортировка
-        if (order == ShipOrder.ID) {
-            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "id"));
-        } else if (order == ShipOrder.SPEED) {
+        if (order == ShipOrder.SPEED) {
             pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "speed"));
         } else if (order == ShipOrder.DATE) {
             pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "prodDate"));
         } else if (order == ShipOrder.RATING) {
             pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "rating"));
         } else {
-            pageable = PageRequest.of(pageNumber, pageSize);
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "id"));
         }
 
         Specification<Ship> spec = makeSpecification(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed,
@@ -184,7 +187,23 @@ public class ShipRestController {
 
         Long roundedId = (long) Math.floor(id);//округляем до ближайшего целого вниз.
         //Если число равно shipId значит shipId - целое число
-        return !id.equals(roundedId) || id < 0;
+        return !id.equals(roundedId) || id <= 0;
+    }
+
+    private boolean isIncorrect(Ship ship) {
+        if (ship.getName() != null && (ship.getName().isEmpty() || ship.getName().length() > 50)) {
+            return true;
+        }
+        if (ship.getPlanet() != null && (ship.getPlanet().isEmpty() || ship.getPlanet().length() > 50)) {
+            return true;
+        }
+        if (ship.getSpeed() != null && (ship.getSpeed() < 0.01 || ship.getSpeed() > 0.99)) {
+            return true;
+        }
+        if (ship.getCrewSize() != null && (ship.getCrewSize() < 1 || ship.getCrewSize() > 9999)) {
+            return true;
+        }
+        return ship.getProdDate() != null && (ship.getProdDate().getTime() < 0);
     }
 
     private Specification<Ship> makeSpecification(String name, String planet, ShipType shipType, Long after,
