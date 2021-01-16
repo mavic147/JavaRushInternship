@@ -66,20 +66,37 @@ public class ShipRestController {
         if (isNotIdValid(id)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        getShipById(id);
+
         Optional<Ship> shipOptional = this.shipService.getById(id);
         if (shipOptional.isPresent()) {
             Ship shipToUpdate = shipOptional.get();
-
+            if (ship.getName() != null) {
+                shipToUpdate.setName(ship.getName());
+            }
+            if (ship.getPlanet() != null) {
+                shipToUpdate.setPlanet(ship.getPlanet());
+            }
+            if (ship.getShipType() != null) {
+                shipToUpdate.setShipType(ship.getShipType());
+            }
+            if (ship.getProdDate() != null) {
+                shipToUpdate.setProdDate(ship.getProdDate());
+            }
+            if (ship.getUsed() != null) {
+                shipToUpdate.setUsed(ship.getUsed());
+            }
+            if (ship.getSpeed() != null) {
+                shipToUpdate.setSpeed(ship.getSpeed());
+            }
+            if (ship.getCrewSize() != null) {
+                shipToUpdate.setCrewSize(ship.getCrewSize());
+            }
+            shipToUpdate.setRating(shipToUpdate.calculateRating());
+            this.shipService.create(shipToUpdate);
+            return new ResponseEntity<>(shipToUpdate, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
-        ship.setRating(ship.calculateRating());
-
-
-        this.shipService.create(ship);
-        return new ResponseEntity<>(ship, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
@@ -118,13 +135,13 @@ public class ShipRestController {
 
         Pageable pageable; //пагинация + сортировка
         if (order == ShipOrder.ID) {
-            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "id"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "id"));
         } else if (order == ShipOrder.SPEED) {
-            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "speed"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "speed"));
         } else if (order == ShipOrder.DATE) {
-            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "prodDate"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "prodDate"));
         } else if (order == ShipOrder.RATING) {
-            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.DESC, "rating"));
+            pageable = PageRequest.of(pageNumber, pageSize, new Sort(Sort.Direction.ASC, "rating"));
         } else {
             pageable = PageRequest.of(pageNumber, pageSize);
         }
