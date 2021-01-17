@@ -7,6 +7,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.util.Date;
 
 public class ShipWithBefore implements Specification<Ship> {
     private Long before;
@@ -20,6 +21,7 @@ public class ShipWithBefore implements Specification<Ship> {
         if (before == null) {
             return cb.isTrue(cb.literal(true));
         }
-        return cb.lessThan(root.get("prodDate"), before);
+        Date dateBefore = new Date(before);
+        return cb.lessThan(root.get("prodDate"), dateBefore);
     }
 }
